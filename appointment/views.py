@@ -1,19 +1,16 @@
 from django.shortcuts import render
 from rest_framework import viewsets
+from django.template.loader import render_to_string
 from . import models
 from . import serializers
+
+
 # Create your views here.
 class AppointmentViewset(viewsets.ModelViewSet):
     queryset = models.Appointment.objects.all()
     serializer_class = serializers.AppointmentSerializer
 
 
-    # custom query for Patient
-    def get_queryset(self):
-        queryset=super().get_queryset()
-        student_id=self.request.query_params.get('student_id')
-
-        if student_id:
-            queryset=queryset.filter(student_id=student_id)
-        return queryset
-        
+    def create(self, request, *args, **kwargs):
+        print("Incoming request data:", request.data) 
+        return super().create(request, *args, **kwargs)

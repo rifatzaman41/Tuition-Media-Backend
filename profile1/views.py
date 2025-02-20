@@ -1,8 +1,10 @@
 from django.shortcuts import render,redirect
 from rest_framework import viewsets
-from . import models
+from .models import Student
 from . import serializers
 from rest_framework .views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import UpdateAPIView
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
@@ -10,11 +12,21 @@ from django.utils.encoding import force_bytes
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.contrib.auth.models import User
+from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth import authenticate,login,logout
 from rest_framework.authtoken.models import Token
-class StudentViewset(viewsets.ModelViewSet):
-    queryset = models.Student.objects.all()
+from rest_framework import filters
+class StudentApiView(viewsets.ModelViewSet):
+    queryset = Student.objects.all()
     serializer_class = serializers.StudentSerializer
+
+
+class AvailableForSPecificStudent(filters.BaseFilterBackend):
+      def filter_queryset(self,request,query_set,view):
+          user_id=request.query_params.get("user_id")
+          if user_id:
+              return query_set.filter(user_id=user_id)
+          return query_set   
 
 class UserRegistrationApiView(APIView):
     serializer_class=serializers.RegistrationSerializer
@@ -28,7 +40,6 @@ class UserRegistrationApiView(APIView):
               token=default_token_generator.make_token(user)
               print("token", token)         
               uid=urlsafe_base64_encode(force_bytes(user.pk))
-              print("uid", uid)
               confirm_link=f"http://127.0.0.1:8000/profile1/active/{uid}/{token}"
               email_subject="Confirm Your Email"
               email_body=render_to_string('confirm_email.html',{'confirm_link':confirm_link})
@@ -60,24 +71,36 @@ class UserLoginApiView(APIView):
           if serializer.is_valid(): 
               username=serializer.validated_data['username']
               password=serializer.validated_data['password']
-
-              user=authenticate(username=username,password=password)
-
+              print(username, password)
+              user=authenticate(username=username, password=password)
+              print(user)
               if user:
                    token, _=Token.objects.get_or_create(user=user)
-                   print(token)
-                   print(_)
+                   print(token)                  
                    login(request,user)
-                   return Response({'token':token.key,'user_id':user.id})
-
+                   student = Student.objects.get(user=user)
+                   return Response({'token':token.key,'student_id':student.id})
+  
               else:
+                  
                    return Response({'error':"Invalid Credential"})     
           return Response(serializer.errors)  
      
-class UserLogOutView(APIView):
-          def get(self,request):
-              request.user.auth_token.delete()
-              logout(request)
-              return redirect('login')
 
+class UserLogoutView2(APIView):
+    def get(self, request):
+        print ('User logged',request)
+        request.user.auth_token.delete()
+        logout(request)
+        return redirect('login')
+
+
+class UserLogoutView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        request.user.auth_token.delete()
+        logout(request)
+        return Response({"success": "Logged out successfully"})
 

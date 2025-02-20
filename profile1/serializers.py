@@ -1,17 +1,24 @@
 from rest_framework import serializers
-from . import models
+from .models import Student
 from django.contrib.auth.models import User
-class StudentSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model=models.Student
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+
+class StudentSerializer(serializers.ModelSerializer):
+     user = UserSerializer(many=False)
+
+     class Meta:
+        model=Student
         fields='__all__'
 
 class RegistrationSerializer(serializers.ModelSerializer):
+  #  student = StudentSerializer(required=False)     
     confirm_password = serializers.CharField(required = True)
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password', 'confirm_password']
-    
     def save(self):
         username = self.validated_data['username']
         first_name = self.validated_data['first_name']
@@ -21,18 +28,23 @@ class RegistrationSerializer(serializers.ModelSerializer):
         password2 = self.validated_data['confirm_password']
         
         if password != password2:
-            raise serializers.ValidationError({'error' : "Password Doesn't Mactched"})
+            raise serializers.ValidationError({'error' : "Password Doesn't Matched"})
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError({'error' : "Email Already exists"})
+
         account = User(username = username, email=email, first_name = first_name, last_name = last_name)
         print(account)
         account.set_password(password)
         account.is_active=False
         account.save()
+        Student.objects.create(user=account)
         return account
     
 
 class UserLoginSerializer(serializers.Serializer):
-     username=serializers.CharField(required=True)
-     password=serializers.CharField(required=True)
+    username=serializers.CharField(required=True)
+    password=serializers.CharField(required=True)     
+    
+
                             
+                                                                                           

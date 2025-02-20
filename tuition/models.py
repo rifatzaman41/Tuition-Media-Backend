@@ -15,7 +15,7 @@ class Specialization(models.Model):
    
 class AvailableTime(models.Model):
      name=models.CharField(max_length=100)
-     teacher=models.ForeignKey("TuitionTeacher",on_delete=models.CASCADE)
+  #   teacher=models.ForeignKey("TuitionTeacher",on_delete=models.CASCADE)
     
      def __str__(self):
          return self.name 
@@ -24,9 +24,11 @@ class TuitionTeacher(models.Model):
      user=models.OneToOneField(User,on_delete=models.CASCADE)     
      image=models.ImageField(upload_to="tuition/images/")
      specialization=models.ManyToManyField(Specialization)
-     available_time=models.ForeignKey(AvailableTime,on_delete=models.CASCADE)
+     available_time=models.ManyToManyField(AvailableTime)
      fee=models.IntegerField()
-   
+     meet_link=models.CharField(max_length=100)
+
+    
 
      def __str__(self):
           return f"{self.user.first_name} {self.user.last_name}"

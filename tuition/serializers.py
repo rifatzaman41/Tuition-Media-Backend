@@ -15,21 +15,17 @@ class AvailableTimeSerializer(serializers.ModelSerializer):
 class TuitionTeacherSerializer(serializers.ModelSerializer):
       user=serializers.StringRelatedField(many=False)
       specialization=serializers.StringRelatedField(many=True)
-      available_time=serializers.StringRelatedField(many=False)
+      available_time=serializers.StringRelatedField(many=True)
       class Meta:
         model=models.TuitionTeacher
         fields='__all__'
         
 class AvailableTimeSerializer(serializers.ModelSerializer):
-    teacher_name= serializers.SerializerMethodField()
     class Meta:
         model=models.AvailableTime
-        fields=['id','name','teacher','teacher_name']
+        fields='__all__'
       
-    def get_teacher_name(self, obj): 
-         if obj.teacher and obj.teacher.user:
-            return f"{obj.teacher.user.first_name} {obj.teacher.user.last_name}"
-         return None  
+     
   
 
 class ReviewSerializer(serializers.ModelSerializer):

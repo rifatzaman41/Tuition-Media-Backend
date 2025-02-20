@@ -14,6 +14,7 @@ class SpecializationViewset(viewsets.ModelViewSet):
 class AvailableTimeForSPecificTeacher(filters.BaseFilterBackend):
       def filter_queryset(self,request,query_set,view):
           teacher_id=request.query_params.get("teacher_id")
+          print("teacher_id")
           if teacher_id:
               return query_set.filter(teacher=teacher_id)
           return query_set
